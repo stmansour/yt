@@ -1,4 +1,5 @@
 from ytstats import YTstats
 
 yt = YTstats()
-yt.get_channel_stats()
+data = yt.get_channel_stats()
+yt.save_to_file()
