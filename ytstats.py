@@ -31,12 +31,13 @@ class YTstats:
             print('data has not been loaded')
             return
         fused_data = {self.channel_id: {"channel_statistics": self.channel_statistics, "video_data": self.video_data}}
-        channel_title = self.video_data.popitem()[1].get('channelTitle',self.channel_id)
-        filestr = channel_title.replace(" ", "_").lower()
-        filestr += ".json"
-        with open(filestr,'w') as f:
-            json.dump(fused_data , f, indent=4)
-        print("saved: " + filestr)
+        if len(self.video_data) > 0:
+            channel_title = self.video_data.popitem()[1].get('channelTitle',self.channel_id)
+            filestr = channel_title.replace(" ", "_").lower()
+            filestr += ".json"
+            with open(filestr,'w') as f:
+                json.dump(fused_data , f, indent=4)
+            print("saved: " + filestr)
 
     def get_channel_video_data(self):
         #-------------------------------
@@ -69,11 +70,15 @@ class YTstats:
 
 
     def _get_channel_videos(self, limit=None):
-        url = f'https://www.googleapis.com/youtube/v3/search?key={self.api_key}&channelId={self.channel_id}&part=id&order=date'
+        url = f'https://www.googleapis.com/youtube/v3/search?key={self.api_key}&channelId={self.channel_id}&part=id'
+        # url = f'https://www.googleapis.com/youtube/v3/search?key={self.api_key}&channelId={self.channel_id}&part=id&order=date'
         if limit is not None and isinstance(limit,int):
             url += "&maxResults=" + str(limit)
         vid, npt = self._get_channel_videos_part(url)
-        print("NextPageToken = " + npt)
+        if npt is None:
+            print("last set collected")
+        else:
+            print("NextPageToken = " + npt)
         idx = 0  # safeguard -- we'll limit to 10 tries if something goes wrong
         while (npt is not None and idx < 10):
             nexturl = url + "&pageToken=" + npt
